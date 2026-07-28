@@ -1,73 +1,113 @@
-# React + TypeScript + Vite
+# Titan Web Coletor
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Aplicação web responsiva e otimizada para operação em **coletores de dados industriais** (coletores de código de barras a laser). O sistema integra operações de conferência de tabaco (PMD), picking e reabastecimento.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🚀 Funcionalidades
 
-## React Compiler
+### 1. 🚜 PMD (Conferência de Tabaco)
+- Seleção e listagem de ordens de conferência.
+- Leitura rápida de materiais com leitor de código de barras.
+- Validação automática de lote (`10...`) e código do material.
+- Animações visuais de confirmação verde e tratamento claro de erros.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### 2. 📦 Abastecimento
+- **Reabastecimento**:
+  - Leitura do SU do Palete (`POST /supply/pick-refueling/{su}`).
+  - Apresentação em destaque do Módulo de Abastecimento.
+  - Confirmação de abastecimento por módulo (`POST /supply/supply-material`).
+- **Picking**:
+  - Consulta automática de tarefas de picking (`POST /supply/claim`).
+  - Suporte a múltiplos status:
+    - **`CLAIMED`**: Leitura e confirmação de SU (`POST /supply/picking`).
+    - **`PICKING`**: Leitura e confirmação de Local/Posição (`POST /supply/place-in-buffer`).
+  - Ciclo contínuo automatizado com recarregamento de tarefas.
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## 📱 Otimizações para Coletores de Dados
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- **Input Otimizado sem Teclado Virtual**: Atributo `inputMode="none"` evita a abertura indesejada do teclado virtual na tela do coletor.
+- **Foco Contínuo Ininterrupto**: O campo de leitura mantém foco automático após cada leitura ou evento `blur`.
+- **Submissão por Enter**: Suporte nativo ao caractere de término de scanner laser (`Enter`).
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+---
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## ⚙️ Variáveis de Ambiente
+
+Crie um arquivo `.env` na raiz do projeto com as seguintes variáveis:
+
+```env
+# API Principal (FastAPI - Conferência PMD)
+VITE_API_URL=http://localhost:25566
+
+# API de Abastecimento (Spring Boot - Picking / Reabastecimento)
+VITE_SUPPLY_API_URL=http://localhost:8081
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+---
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## 🛠️ Desenvolvimento Local
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### Pré-requisitos
+- **Node.js**: v20+ ou v22+
+- **npm**: v10+
+
+### Instalação e Execução
+```bash
+# 1. Instalar dependências
+npm install
+
+# 2. Iniciar servidor de desenvolvimento (porta 3001)
+npm run dev
+
+# 3. Compilar projeto para produção
+npm run build
+```
+
+---
+
+## 🐳 Execução com Docker
+
+### 1. Usando Docker Compose (Recomendado)
+
+```bash
+# Subir a aplicação na porta 3001
+docker compose up -d --build
+```
+
+A aplicação estará disponível em `http://localhost:3001`.
+
+### 2. Usando Docker diretamente
+
+```bash
+# Compilar a imagem Docker
+docker build \
+  --build-arg VITE_API_URL=http://localhost:25566 \
+  --build-arg VITE_SUPPLY_API_URL=http://localhost:8081 \
+  -t titan-web-coletor .
+
+# Executar o contêiner na porta 3001
+docker run -d -p 3001:80 --name titan-web-coletor titan-web-coletor
+```
+
+---
+
+## 📁 Estrutura do Projeto
+
+```
+Titan-Web-Coletor/
+├── public/                 # Arquivos estáticos
+├── src/
+│   ├── components/         # Componentes React reutilizáveis
+│   ├── hooks/              # Custom Hooks (useConference, usePicking, useReabastecimento)
+│   ├── pages/              # Páginas da aplicação (Dashboard, Conference, Picking, Reabastecimento)
+│   ├── routes/             # Configuração de rotas (React Router)
+│   ├── services/           # Comunicação com APIs (apiFetch, supplyApiFetch)
+│   └── utils/              # Funções utilitárias e formatadores
+├── Dockerfile              # Build multi-stage Node.js + NGINX
+├── docker-compose.yml      # Orquestração do Docker
+├── nginx.conf              # Configuração NGINX para roteamento SPA
+└── package.json            # Dependências e scripts
 ```
