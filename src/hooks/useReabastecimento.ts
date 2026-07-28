@@ -57,12 +57,19 @@ export function useReabastecimento() {
   // Step 1: Submit SU to POST /supply/pick-refueling/{su}
   const handleSuSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const value = suInputRef.current?.value?.trim()
+    if (submitting || loading) return
+
+    const inputEl = suInputRef.current
+    const value = inputEl?.value?.trim()
     if (!value) return
+
     setSubmitting(true)
     setLoading(true)
     setError(undefined)
     setFlash(undefined)
+
+    // Clear input immediately to prevent scanner string concatenation
+    if (inputEl) inputEl.value = ''
 
     try {
       const res = await supplyApiFetch<RawRefuelingResponse>(
@@ -77,7 +84,6 @@ export function useReabastecimento() {
       if (parsed) {
         setRefuelingData(parsed)
       } else {
-        // Fallback construct if backend returns status without full object
         setRefuelingData({
           id: 1,
           su: value,
@@ -88,16 +94,16 @@ export function useReabastecimento() {
       }
 
       setSuccessFlash('Palete Carregado!')
-
-      setTimeout(() => {
-        setSuccessFlash(undefined)
-        if (suInputRef.current) suInputRef.current.value = ''
-        moduleInputRef.current?.focus()
-      }, 1200)
+      setTimeout(() => setSuccessFlash(undefined), 1500)
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Falha ao buscar palete para reabastecimento'
       setFlash(msg)
-      setTimeout(() => setFlash(undefined), 2800)
+      setTimeout(() => setFlash(undefined), 3000)
+      if (inputEl) {
+        inputEl.value = value
+        inputEl.focus()
+        inputEl.select?.()
+      }
     } finally {
       setSubmitting(false)
       setLoading(false)
@@ -107,10 +113,16 @@ export function useReabastecimento() {
   // Step 2: Confirm Module
   const handleModuleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const value = moduleInputRef.current?.value?.trim()
-    if (!value || !refuelingData) return
+    if (submitting || loading || !refuelingData) return
+
+    const inputEl = moduleInputRef.current
+    const value = inputEl?.value?.trim()
+    if (!value) return
+
     setSubmitting(true)
     setFlash(undefined)
+
+    if (inputEl) inputEl.value = ''
 
     try {
       await supplyApiFetch<unknown>('/supply/supply-material', {
@@ -123,17 +135,17 @@ export function useReabastecimento() {
       })
 
       setSuccessFlash('Módulo Abastecido!')
-
-      setTimeout(() => {
-        setSuccessFlash(undefined)
-        if (moduleInputRef.current) moduleInputRef.current.value = ''
-        if (suInputRef.current) suInputRef.current.value = ''
-        setRefuelingData(undefined)
-      }, 1200)
+      setRefuelingData(undefined) // Reset state immediately for next cycle
+      setTimeout(() => setSuccessFlash(undefined), 1500)
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Falha ao confirmar módulo de abastecimento'
       setFlash(msg)
-      setTimeout(() => setFlash(undefined), 2800)
+      setTimeout(() => setFlash(undefined), 3000)
+      if (inputEl) {
+        inputEl.value = value
+        inputEl.focus()
+        inputEl.select?.()
+      }
     } finally {
       setSubmitting(false)
     }

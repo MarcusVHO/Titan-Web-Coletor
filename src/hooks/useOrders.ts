@@ -67,9 +67,14 @@ export function useOrders() {
 
   const handleScanSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const val = scanRef.current?.value?.trim()
+    if (scanning || loading) return
+
+    const inputEl = scanRef.current
+    const val = inputEl?.value?.trim()
     if (!val) return
+
     setScanning(true)
+    if (inputEl) inputEl.value = ''
 
     try {
       const res = await apiFetch<unknown>(
@@ -88,6 +93,11 @@ export function useOrders() {
         const rawMsg = typeof anyRes?.message === 'string' ? (anyRes.message as string) : ''
         const msg = /incorrect/i.test(rawMsg) ? 'Ordem incorreta!' : 'Ordem não encontrada'
         showFlashMessage(msg)
+        if (inputEl) {
+          inputEl.value = val
+          inputEl.focus()
+          inputEl.select?.()
+        }
       } else {
         window.location.href = `/conference?order=${encodeURIComponent(val)}`
       }
@@ -95,11 +105,14 @@ export function useOrders() {
       const raw = e instanceof Error ? e.message : 'Falha ao buscar ordem'
       const msg = /incorrect/i.test(raw) ? 'Ordem incorreta!' : 'Ordem não encontrada'
       showFlashMessage(msg)
+      if (inputEl) {
+        inputEl.value = val
+        inputEl.focus()
+        inputEl.select?.()
+      }
     } finally {
       setScanning(false)
-      if (scanRef.current) {
-        scanRef.current.focus()
-      }
+      scanRef.current?.focus()
     }
   }
 

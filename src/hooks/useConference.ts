@@ -124,14 +124,16 @@ export function useConference(orderParam: string | null) {
 
   const handleItemSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const rawValue = inputRef.current?.value?.trim()
+    if (checking || loading) return
+
+    const inputEl = inputRef.current
+    const rawValue = inputEl?.value?.trim()
     if (!rawValue || !orderParam) return
+
     setChecking(true)
     setError(undefined)
-    if (inputRef.current) {
-      inputRef.current.value = ''
-      inputRef.current.focus()
-    }
+
+    if (inputEl) inputEl.value = ''
     
     const formattedCheckText = formatCheckTextForBackend(rawValue)
 
@@ -157,6 +159,11 @@ export function useConference(orderParam: string | null) {
       else if (/checked/i.test(raw)) msg = 'Item já conferido!'
       else if (raw) msg = raw
       showFlashMessage(msg)
+      if (inputEl) {
+        inputEl.value = rawValue
+        inputEl.focus()
+        inputEl.select?.()
+      }
     } finally {
       setChecking(false)
       inputRef.current?.focus()

@@ -92,9 +92,11 @@ export default function Reabastecimento() {
                 autoComplete="off"
                 inputMode="none"
                 enterKeyHint="done"
-                onBlur={() => {
-                  if (!refuelingData && !submitting) {
-                    setTimeout(() => suInputRef.current?.focus(), 0)
+                onBlur={(e) => {
+                  if (submitting || loading) return
+                  if (e.relatedTarget && (e.relatedTarget.tagName === 'BUTTON' || e.relatedTarget.tagName === 'A')) return
+                  if (!refuelingData) {
+                    setTimeout(() => suInputRef.current?.focus(), 10)
                   }
                 }}
               />
@@ -162,9 +164,11 @@ export default function Reabastecimento() {
                 autoComplete="off"
                 inputMode="none"
                 enterKeyHint="done"
-                onBlur={() => {
-                  if (refuelingData && !submitting) {
-                    setTimeout(() => moduleInputRef.current?.focus(), 0)
+                onBlur={(e) => {
+                  if (submitting || loading) return
+                  if (e.relatedTarget && (e.relatedTarget.tagName === 'BUTTON' || e.relatedTarget.tagName === 'A')) return
+                  if (refuelingData) {
+                    setTimeout(() => moduleInputRef.current?.focus(), 10)
                   }
                 }}
               />

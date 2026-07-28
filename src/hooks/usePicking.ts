@@ -84,11 +84,18 @@ export function usePicking() {
 
   const handleSuSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const value = suInputRef.current?.value?.trim()
-    if (!value || !claim) return
+    if (submitting || loading || !claim) return
+
+    const inputEl = suInputRef.current
+    const value = inputEl?.value?.trim()
+    if (!value) return
+
     setSubmitting(true)
     setScannedSu(value)
     setFlash(undefined)
+
+    // Clear input immediately to prevent concatenation
+    if (inputEl) inputEl.value = ''
 
     try {
       const res = await supplyApiFetch<RawClaimResponse>('/supply/picking', {
@@ -109,21 +116,16 @@ export function usePicking() {
       }
 
       setSuccessFlash('SU Confirmado!')
-
-      setTimeout(() => {
-        setSuccessFlash(undefined)
-        if (suInputRef.current) suInputRef.current.value = ''
-        if (locationInputRef.current) {
-          locationInputRef.current.value = ''
-          locationInputRef.current.focus()
-        }
-      }, 1200)
+      setTimeout(() => setSuccessFlash(undefined), 1500)
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Falha ao confirmar SU'
       setFlash(msg)
-      setTimeout(() => {
-        setFlash(undefined)
-      }, 2800)
+      setTimeout(() => setFlash(undefined), 3000)
+      if (inputEl) {
+        inputEl.value = value
+        inputEl.focus()
+        inputEl.select?.()
+      }
     } finally {
       setSubmitting(false)
     }
@@ -131,11 +133,17 @@ export function usePicking() {
 
   const handleLocationSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const value = locationInputRef.current?.value?.trim()
-    if (!value || !claim) return
+    if (submitting || loading || !claim) return
+
+    const inputEl = locationInputRef.current
+    const value = inputEl?.value?.trim()
+    if (!value) return
+
     setSubmitting(true)
     setScannedLocation(value)
     setFlash(undefined)
+
+    if (inputEl) inputEl.value = ''
 
     try {
       const res = await supplyApiFetch<RawClaimResponse>('/supply/place-in-buffer', {
@@ -148,23 +156,20 @@ export function usePicking() {
       })
 
       parseClaimResponse(res)
-
       setSuccessFlash('Local Confirmado!')
+      setTimeout(() => setSuccessFlash(undefined), 1500)
 
-      setTimeout(async () => {
-        setSuccessFlash(undefined)
-        if (locationInputRef.current) locationInputRef.current.value = ''
-        if (suInputRef.current) suInputRef.current.value = ''
-
-        // Return to claim new item for next cycle
-        await fetchClaim()
-      }, 1200)
+      // Immediately fetch next claim without 1.2s lag
+      await fetchClaim()
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Falha ao confirmar local'
       setFlash(msg)
-      setTimeout(() => {
-        setFlash(undefined)
-      }, 2800)
+      setTimeout(() => setFlash(undefined), 3000)
+      if (inputEl) {
+        inputEl.value = value
+        inputEl.focus()
+        inputEl.select?.()
+      }
     } finally {
       setSubmitting(false)
     }

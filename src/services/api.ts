@@ -1,5 +1,19 @@
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
-const SUPPLY_BASE_URL = import.meta.env.VITE_SUPPLY_API_URL || 'http://127.0.0.1:8081'
+const getEnvVar = (v1?: string, v2?: string, fallback = '') => {
+  if (v1 && v1.trim()) return v1.trim()
+  if (v2 && v2.trim()) return v2.trim()
+  return fallback
+}
+
+const BASE_URL = getEnvVar(
+  import.meta.env.VITE_API_URL,
+  import.meta.env.VITE_API_BASE_URL,
+  'http://127.0.0.1:8000',
+)
+const SUPPLY_BASE_URL = getEnvVar(
+  import.meta.env.VITE_SUPPLY_API_URL,
+  import.meta.env.VITE_SUPPLY_API_BASE_URL,
+  'http://127.0.0.1:8081',
+)
 
 function buildUrl(path: string, overrideBaseUrl?: string) {
   const base = (overrideBaseUrl || BASE_URL).replace(/\/+$/, '')
@@ -13,6 +27,7 @@ export type ApiOptions = {
   body?: unknown
   auth?: boolean
   baseUrl?: string
+  timeoutMs?: number
 }
 
 export async function apiFetch<T = unknown>(
@@ -43,53 +58,73 @@ export async function apiFetch<T = unknown>(
   }
 
   const targetUrl = buildUrl(path, options.baseUrl)
-  const res = await fetch(targetUrl, {
-    method: options.method ?? 'GET',
-    headers,
-    body: requestBody,
-  })
+  const timeoutMs = options.timeoutMs ?? 10000
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
 
-  if (res.status === 401) {
-    clearToken()
-    window.location.href = '/'
-    throw new Error('Sessão expirada. Faça login novamente.')
-  }
-
-  const text = await res.text()
-  let data: unknown
   try {
-    data = text ? JSON.parse(text) : undefined
-  } catch {
-    data = text
-  }
+    const res = await fetch(targetUrl, {
+      method: options.method ?? 'GET',
+      headers,
+      body: requestBody,
+      signal: controller.signal,
+    })
 
-  if (!res.ok) {
-    let message = `Erro ${res.status}: ${res.statusText}`
-    if (data && typeof data === 'object') {
-      const d = data as Record<string, unknown>
-      if (typeof d.message === 'string') message = d.message
-      else if (typeof d.error === 'string') message = d.error
-      else if (Array.isArray(d.detail)) {
-        const details = (d.detail as unknown[])
-          .map((it) => {
-            if (it && typeof it === 'object') {
-              const msg = (it as Record<string, unknown>).msg
-              return typeof msg === 'string' ? msg : ''
-            }
-            return ''
-          })
-          .filter(Boolean)
-          .join('; ')
-        if (details) message = details
-      } else if (typeof d.detail === 'string') {
-        message = d.detail
-      }
-    } else if (typeof data === 'string' && data.trim()) {
-      message = data
+    if (res.status === 401) {
+      clearToken()
+      window.location.href = '/'
+      throw new Error('Sessão expirada. Faça login novamente.')
     }
-    throw new Error(message)
+
+    const text = await res.text()
+    let data: unknown
+    try {
+      data = text ? JSON.parse(text) : undefined
+    } catch {
+      data = text
+    }
+
+    if (!res.ok) {
+      let message = `Erro ${res.status}: ${res.statusText}`
+      if (data && typeof data === 'object') {
+        const d = data as Record<string, unknown>
+        if (typeof d.message === 'string') message = d.message
+        else if (typeof d.error === 'string') message = d.error
+        else if (Array.isArray(d.detail)) {
+          const details = (d.detail as unknown[])
+            .map((it) => {
+              if (it && typeof it === 'object') {
+                const msg = (it as Record<string, unknown>).msg
+                return typeof msg === 'string' ? msg : ''
+              }
+              return ''
+            })
+            .filter(Boolean)
+            .join('; ')
+          if (details) message = details
+        } else if (typeof d.detail === 'string') {
+          message = d.detail
+        }
+      } else if (typeof data === 'string' && data.trim()) {
+        message = data
+      }
+      throw new Error(message)
+    }
+    return data as T
+  } catch (err: unknown) {
+    if (err instanceof Error && err.name === 'AbortError') {
+      throw new Error('Tempo limite de resposta excedido (10s). Verifique a conexão com a API.')
+    }
+    if (
+      err instanceof Error &&
+      (err.message.includes('Failed to fetch') || err.message.includes('NetworkError'))
+    ) {
+      throw new Error('Falha de conexão com a API. Verifique se o backend está online.')
+    }
+    throw err
+  } finally {
+    clearTimeout(timeoutId)
   }
-  return data as T
 }
 
 export function setToken(token: string) {

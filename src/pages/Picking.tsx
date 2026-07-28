@@ -128,11 +128,13 @@ export default function Picking() {
                   autoComplete="off"
                   inputMode="none"
                   enterKeyHint="done"
-                  onBlur={() => {
-                    if (isPickingStatus && !submitting) {
-                      setTimeout(() => locationInputRef.current?.focus(), 0)
-                    }
-                  }}
+                  onBlur={(e) => {
+                  if (submitting || loading) return
+                  if (e.relatedTarget && (e.relatedTarget.tagName === 'BUTTON' || e.relatedTarget.tagName === 'A')) return
+                  if (isPickingStatus) {
+                    setTimeout(() => locationInputRef.current?.focus(), 10)
+                  }
+                }}
                 />
                 <button
                   type="submit"
@@ -160,9 +162,11 @@ export default function Picking() {
                   autoComplete="off"
                   inputMode="none"
                   enterKeyHint="done"
-                  onBlur={() => {
-                    if (!isPickingStatus && !submitting) {
-                      setTimeout(() => suInputRef.current?.focus(), 0)
+                  onBlur={(e) => {
+                    if (submitting || loading) return
+                    if (e.relatedTarget && (e.relatedTarget.tagName === 'BUTTON' || e.relatedTarget.tagName === 'A')) return
+                    if (!isPickingStatus) {
+                      setTimeout(() => suInputRef.current?.focus(), 10)
                     }
                   }}
                 />
