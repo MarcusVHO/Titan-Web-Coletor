@@ -1,8 +1,8 @@
-const BASE_URL =
-  (import.meta.env.VITE_API_URL as string | undefined) ?? 'http://127.0.0.1:8000'
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
+const SUPPLY_BASE_URL = import.meta.env.VITE_SUPPLY_API_URL || 'http://127.0.0.1:8081'
 
-function buildUrl(path: string) {
-  const base = BASE_URL.replace(/\/+$/, '')
+function buildUrl(path: string, overrideBaseUrl?: string) {
+  const base = (overrideBaseUrl || BASE_URL).replace(/\/+$/, '')
   const p = path.replace(/^\/+/, '')
   return `${base}/${p}`
 }
@@ -12,6 +12,7 @@ export type ApiOptions = {
   headers?: Record<string, string>
   body?: unknown
   auth?: boolean
+  baseUrl?: string
 }
 
 export async function apiFetch<T = unknown>(
@@ -41,7 +42,8 @@ export async function apiFetch<T = unknown>(
     }
   }
 
-  const res = await fetch(buildUrl(path), {
+  const targetUrl = buildUrl(path, options.baseUrl)
+  const res = await fetch(targetUrl, {
     method: options.method ?? 'GET',
     headers,
     body: requestBody,
@@ -96,4 +98,14 @@ export function setToken(token: string) {
 
 export function clearToken() {
   localStorage.removeItem('auth_token')
+}
+
+export function supplyApiFetch<T = unknown>(
+  path: string,
+  options: ApiOptions = {},
+): Promise<T> {
+  return apiFetch<T>(path, {
+    ...options,
+    baseUrl: SUPPLY_BASE_URL,
+  })
 }

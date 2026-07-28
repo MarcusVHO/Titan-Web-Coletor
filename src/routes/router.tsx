@@ -29,6 +29,27 @@ export const router = createBrowserRouter([
       return { Component: mod.default }
     },
   },
+  {
+    path: '/abastecimento',
+    lazy: async () => {
+      const mod = await import('@/pages/Abastecimento')
+      return { Component: mod.default }
+    },
+  },
+  {
+    path: '/abastecimento/picking',
+    lazy: async () => {
+      const mod = await import('@/pages/Picking')
+      return { Component: mod.default }
+    },
+  },
+  {
+    path: '/abastecimento/reabastecimento',
+    lazy: async () => {
+      const mod = await import('@/pages/Reabastecimento')
+      return { Component: mod.default }
+    },
+  },
 ])
 
 export default router

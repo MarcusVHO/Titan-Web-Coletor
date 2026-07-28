@@ -1,50 +1,20 @@
-import type { FormEvent } from 'react'
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { login } from '@/services/auth'
-
-type LoginState = {
-  oneid: string
-  password: string
-  error?: string
-  loading: boolean
-  success?: string
-}
+import { useLogin } from '@/hooks/useLogin'
 
 export default function Login() {
-  const [state, setState] = useState<LoginState>({
-    oneid: '',
-    password: '',
-    loading: false,
-  })
-  const [showPassword, setShowPassword] = useState(false)
-  const navigate = useNavigate()
-
-  const onSubmit = async (e: FormEvent) => {
-    e.preventDefault()
-    setState((s) => ({ ...s, loading: true, error: undefined, success: undefined }))
-    try {
-      if (!state.oneid) throw new Error('Informe seu OneID')
-      if (state.oneid.length < 3) throw new Error('OneID muito curto')
-      if (!state.password) throw new Error('Informe sua senha')
-      if (state.password.length < 6) throw new Error('Senha muito curta')
-
-      await login(state.oneid, state.password)
-      navigate('/dashboard', { replace: true })
-    } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : 'Erro ao autenticar'
-      setState((s) => ({ ...s, error: message }))
-    } finally {
-      setState((s) => ({ ...s, loading: false }))
-    }
-  }
+  const {
+    state,
+    setOneid,
+    setPassword,
+    showPassword,
+    toggleShowPassword,
+    handleLogin,
+  } = useLogin()
 
   return (
     <div className="login__container">
       <form
         className="login__card"
-        onSubmit={onSubmit}
+        onSubmit={handleLogin}
         aria-busy={state.loading}
         autoComplete="off"
       >
@@ -62,7 +32,7 @@ export default function Login() {
             id="oneid"
             type="text"
             value={state.oneid}
-            onChange={(e) => setState((s) => ({ ...s, oneid: e.target.value }))}
+            onChange={(e) => setOneid(e.target.value)}
             placeholder="seu OneID"
             autoComplete="off"
             autoCapitalize="none"
@@ -79,9 +49,7 @@ export default function Login() {
               id="password"
               type={showPassword ? 'text' : 'password'}
               value={state.password}
-              onChange={(e) =>
-                setState((s) => ({ ...s, password: e.target.value }))
-              }
+              onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
               autoComplete="off"
               autoCapitalize="none"
@@ -92,7 +60,7 @@ export default function Login() {
             <button
               className="login__toggle"
               type="button"
-              onClick={() => setShowPassword((v) => !v)}
+              onClick={toggleShowPassword}
               aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
             >
               {showPassword ? 'Ocultar' : 'Mostrar'}
