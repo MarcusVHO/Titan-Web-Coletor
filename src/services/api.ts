@@ -1,18 +1,17 @@
-const getEnvVar = (v1?: string, v2?: string, fallback = '') => {
+const getEnvVar = (v1?: string, v2?: string) => {
   if (v1 && v1.trim()) return v1.trim()
   if (v2 && v2.trim()) return v2.trim()
-  return fallback
+  return ''
 }
 
 const BASE_URL = getEnvVar(
   import.meta.env.VITE_API_URL,
   import.meta.env.VITE_API_BASE_URL,
-  'http://127.0.0.1:8000',
 )
+
 const SUPPLY_BASE_URL = getEnvVar(
   import.meta.env.VITE_SUPPLY_API_URL,
   import.meta.env.VITE_SUPPLY_API_BASE_URL,
-  'http://127.0.0.1:8081',
 )
 
 function buildUrl(path: string, overrideBaseUrl?: string) {

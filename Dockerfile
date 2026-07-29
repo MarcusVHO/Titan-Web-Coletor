@@ -20,15 +20,17 @@ ENV VITE_SUPPLY_API_URL=${VITE_SUPPLY_API_URL}
 # Build production bundle
 RUN npm run build
 
-# Stage 2: Serve with NGINX
-FROM nginx:alpine
+# Stage 2: Serve with Node.js + serve
+FROM node:22-alpine AS runner
 
-# Copy custom NGINX configuration for SPA client routing
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+WORKDIR /app
+
+# Install serve package to serve SPA static files
+RUN npm install -g serve
 
 # Copy production build artifacts
-COPY --from=builder /app/dist /usr/share/nginx/html
+COPY --from=builder /app/dist ./dist
 
 EXPOSE 80
 
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["serve", "-s", "dist", "-l", "80"]
