@@ -1,22 +1,50 @@
-const getEnvVar = (v1?: string, v2?: string, fallback = '') => {
-  if (v1 && v1.trim()) return v1.trim()
-  if (v2 && v2.trim()) return v2.trim()
-  return fallback
+const getEnvVar = (...candidates: (string | undefined)[]): string => {
+  for (const item of candidates) {
+    if (item && item.trim()) {
+      return item.trim()
+    }
+  }
+  return ''
 }
 
-const BASE_URL = getEnvVar(
-  import.meta.env.VITE_API_URL,
-  import.meta.env.VITE_API_BASE_URL,
-  'http://127.0.0.1:8000',
-)
-const SUPPLY_BASE_URL = getEnvVar(
-  import.meta.env.VITE_SUPPLY_API_URL,
-  import.meta.env.VITE_SUPPLY_API_BASE_URL,
-  'http://127.0.0.1:8081',
-)
+const getContainerEnv = (key: string): string | undefined => {
+  if (typeof window !== 'undefined') {
+    const win = window as unknown as Record<string, unknown>
+    const envObj = (win.__ENV__ || win._env_ || win.ENV) as Record<string, string> | undefined
+    if (envObj && typeof envObj === 'object') {
+      if (envObj[key] && typeof envObj[key] === 'string') {
+        return envObj[key]
+      }
+    }
+    if (typeof win[key] === 'string') {
+      return win[key] as string
+    }
+  }
+  return undefined
+}
+
+export function getBaseUrl(): string {
+  return getEnvVar(
+    import.meta.env.VITE_API_URL,
+    getContainerEnv('VITE_API_URL'),
+    getContainerEnv('API_URL'),
+  )
+}
+
+export function getSupplyBaseUrl(): string {
+  return getEnvVar(
+    import.meta.env.VITE_SUPPLY_API_URL,
+    getContainerEnv('VITE_SUPPLY_API_URL'),
+    getContainerEnv('SUPPLY_API_URL'),
+  )
+}
 
 function buildUrl(path: string, overrideBaseUrl?: string) {
-  const base = (overrideBaseUrl || BASE_URL).replace(/\/+$/, '')
+  const rawBase = overrideBaseUrl !== undefined ? overrideBaseUrl : getBaseUrl()
+  const base = rawBase.replace(/\/+$/, '')
+  if (!base) {
+    throw new Error('URL do backend não configurada. Defina a variável VITE_API_URL na .env ou no container.')
+  }
   const p = path.replace(/^\/+/, '')
   return `${base}/${p}`
 }
@@ -70,7 +98,7 @@ export async function apiFetch<T = unknown>(
       signal: controller.signal,
     })
 
-    if (res.status === 401) {
+    if (res.status === 401 && options.auth) {
       clearToken()
       window.location.href = '/'
       throw new Error('Sessão expirada. Faça login novamente.')
@@ -141,6 +169,6 @@ export function supplyApiFetch<T = unknown>(
 ): Promise<T> {
   return apiFetch<T>(path, {
     ...options,
-    baseUrl: SUPPLY_BASE_URL,
+    baseUrl: getSupplyBaseUrl(),
   })
 }
