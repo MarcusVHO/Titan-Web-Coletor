@@ -106,8 +106,6 @@ Titan-Web-Coletor/
 │   ├── routes/             # Configuração de rotas (React Router)
 │   ├── services/           # Comunicação com APIs (apiFetch, supplyApiFetch)
 │   └── utils/              # Funções utilitárias e formatadores
-├── Dockerfile              # Build multi-stage Node.js + NGINX
-├── docker-compose.yml      # Orquestração do Docker
-├── nginx.conf              # Configuração NGINX para roteamento SPA
+├── Dockerfile              # Build multi-stage Node.js + serve
 └── package.json            # Dependências e scripts
 ```

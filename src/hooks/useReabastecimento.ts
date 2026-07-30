@@ -11,6 +11,101 @@ export type RefuelingData = {
 
 type RawRefuelingResponse = RefuelingData | { success?: boolean; data?: RefuelingData }
 
+const normalizeRefueling = (obj: unknown): RefuelingData | undefined => {
+  if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return undefined
+
+  const raw = obj as Record<string, unknown>
+
+  const idRaw = raw.id ?? raw.refuelingId ?? raw.materialId ?? raw.id_refueling ?? raw.id_material
+  const id = typeof idRaw === 'number' ? idRaw : parseInt(String(idRaw ?? 1), 10) || 1
+
+  const suRaw =
+    raw.su ??
+    raw.suCode ??
+    raw.storageUnit ??
+    raw.storage_unit ??
+    raw.barcode ??
+    raw.codigoSu ??
+    raw.su_code ??
+    raw.cod_su ??
+    raw.codigo_su ??
+    raw.pallet ??
+    raw.palete ??
+    ''
+  const su = String(suRaw ?? '').trim()
+
+  const skuRaw =
+    raw.sku ??
+    raw.skuCode ??
+    raw.material ??
+    raw.materialSku ??
+    raw.materialCode ??
+    raw.codigoSku ??
+    raw.sku_code ??
+    raw.cod_sku ??
+    raw.codigo_sku ??
+    raw.cod_material ??
+    raw.codigo_material ??
+    raw.produto ??
+    ''
+  const sku = String(skuRaw ?? '').trim()
+
+  const moduleRaw =
+    raw.module ??
+    raw.modulo ??
+    raw.location ??
+    raw.moduleCode ??
+    raw.codigoModulo ??
+    raw.posicao ??
+    raw.localizacao ??
+    ''
+  const moduleName = String(moduleRaw ?? '').trim()
+
+  const qtyRaw = raw.quantity ?? raw.qty ?? raw.quantidade ?? raw.amount ?? raw.qtd ?? 0
+  const quantity = typeof qtyRaw === 'number' ? qtyRaw : parseFloat(String(qtyRaw)) || 0
+
+  const hasDataFields = Boolean(
+    idRaw !== undefined || moduleName !== '' || su !== '' || sku !== '' || qtyRaw !== undefined
+  )
+
+  if (!hasDataFields) return undefined
+
+  return {
+    id,
+    su: su || '---',
+    sku: sku || '---',
+    module: moduleName || '---',
+    quantity: isNaN(quantity) ? 0 : quantity,
+  }
+}
+
+export const parseRefuelingResponse = (res: unknown): RefuelingData | undefined => {
+  if (!res) return undefined
+
+  const direct = normalizeRefueling(res)
+  if (direct) return direct
+
+  if (Array.isArray(res) && res.length > 0) {
+    const item = normalizeRefueling(res[0])
+    if (item) return item
+  }
+
+  if (typeof res === 'object' && res !== null) {
+    const raw = res as Record<string, unknown>
+    const nested = raw.data ?? raw.content ?? raw.item ?? raw.refueling ?? raw.result ?? raw.payload ?? raw.items
+
+    if (Array.isArray(nested) && nested.length > 0) {
+      const item = normalizeRefueling(nested[0])
+      if (item) return item
+    } else if (nested && typeof nested === 'object') {
+      const item = normalizeRefueling(nested)
+      if (item) return item
+    }
+  }
+
+  return undefined
+}
+
 export function useReabastecimento() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | undefined>()
@@ -20,19 +115,6 @@ export function useReabastecimento() {
   const [submitting, setSubmitting] = useState(false)
   const [flash, setFlash] = useState<string | undefined>()
   const [successFlash, setSuccessFlash] = useState<string | undefined>()
-
-  const parseRefuelingResponse = (res: unknown): RefuelingData | undefined => {
-    if (res && typeof res === 'object') {
-      if ('module' in res && typeof (res as RefuelingData).module === 'string') {
-        return res as RefuelingData
-      }
-      if ('data' in res && res.data && typeof res.data === 'object' && res.data !== null) {
-        const d = res.data as RefuelingData
-        if ('module' in d || 'id' in d) return d
-      }
-    }
-    return undefined
-  }
 
   // Auto focus input based on active step
   useEffect(() => {

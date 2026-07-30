@@ -1,43 +1,19 @@
-const getEnvVar = (...candidates: (string | undefined)[]): string => {
-  for (const item of candidates) {
-    if (item && item.trim()) {
-      return item.trim()
+const getRuntimeEnv = (key: string): string => {
+  if (typeof window !== 'undefined' && (window as unknown as Record<string, Record<string, string>>).__ENV__) {
+    const env = (window as unknown as Record<string, Record<string, string>>).__ENV__
+    const val = env[key]
+    if (typeof val === 'string' && val.trim() && !val.startsWith('$')) {
+      return val.trim()
     }
   }
-  return ''
+  return (import.meta.env[key] as string) ?? ''
 }
 
-const getContainerEnv = (key: string): string | undefined => {
-  if (typeof window !== 'undefined') {
-    const win = window as unknown as Record<string, unknown>
-    const envObj = (win.__ENV__ || win._env_ || win.ENV) as Record<string, string> | undefined
-    if (envObj && typeof envObj === 'object') {
-      if (envObj[key] && typeof envObj[key] === 'string') {
-        return envObj[key]
-      }
-    }
-    if (typeof win[key] === 'string') {
-      return win[key] as string
-    }
-  }
-  return undefined
-}
+const BASE_URL =
+  getRuntimeEnv('VITE_API_URL') || getRuntimeEnv('VITE_API_BASE_URL')
 
-export function getBaseUrl(): string {
-  return getEnvVar(
-    import.meta.env.VITE_API_URL,
-    getContainerEnv('VITE_API_URL'),
-    getContainerEnv('API_URL'),
-  )
-}
-
-export function getSupplyBaseUrl(): string {
-  return getEnvVar(
-    import.meta.env.VITE_SUPPLY_API_URL,
-    getContainerEnv('VITE_SUPPLY_API_URL'),
-    getContainerEnv('SUPPLY_API_URL'),
-  )
-}
+const SUPPLY_BASE_URL =
+  getRuntimeEnv('VITE_SUPPLY_API_URL') || getRuntimeEnv('VITE_SUPPLY_API_BASE_URL')
 
 function buildUrl(path: string, overrideBaseUrl?: string) {
   const rawBase = overrideBaseUrl !== undefined ? overrideBaseUrl : getBaseUrl()
