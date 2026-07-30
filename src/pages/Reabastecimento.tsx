@@ -95,9 +95,13 @@ export default function Reabastecimento() {
                 onBlur={(e) => {
                   if (submitting || loading) return
                   if (e.relatedTarget && (e.relatedTarget.tagName === 'BUTTON' || e.relatedTarget.tagName === 'A')) return
-                  if (!refuelingData) {
-                    setTimeout(() => suInputRef.current?.focus(), 10)
-                  }
+                  setTimeout(() => {
+                    const active = document.activeElement
+                    if (active && (active.tagName === 'BUTTON' || active.tagName === 'A')) return
+                    if (!refuelingData) {
+                      suInputRef.current?.focus()
+                    }
+                  }, 100)
                 }}
               />
               <button
@@ -167,9 +171,13 @@ export default function Reabastecimento() {
                 onBlur={(e) => {
                   if (submitting || loading) return
                   if (e.relatedTarget && (e.relatedTarget.tagName === 'BUTTON' || e.relatedTarget.tagName === 'A')) return
-                  if (refuelingData) {
-                    setTimeout(() => moduleInputRef.current?.focus(), 10)
-                  }
+                  setTimeout(() => {
+                    const active = document.activeElement
+                    if (active && (active.tagName === 'BUTTON' || active.tagName === 'A')) return
+                    if (refuelingData) {
+                      moduleInputRef.current?.focus()
+                    }
+                  }, 100)
                 }}
               />
               <button

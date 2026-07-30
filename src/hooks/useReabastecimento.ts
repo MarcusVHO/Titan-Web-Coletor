@@ -165,18 +165,13 @@ export function useReabastecimento() {
       const parsed = parseRefuelingResponse(res)
       if (parsed) {
         setRefuelingData(parsed)
+        setSuccessFlash('Palete Carregado!')
+        setTimeout(() => setSuccessFlash(undefined), 1500)
       } else {
-        setRefuelingData({
-          id: 1,
-          su: value,
-          sku: '---',
-          module: '---',
-          quantity: 0,
-        })
+        setRefuelingData(undefined)
+        setFlash('Nenhum dado válido retornado para este SU/Palete')
+        setTimeout(() => setFlash(undefined), 3000)
       }
-
-      setSuccessFlash('Palete Carregado!')
-      setTimeout(() => setSuccessFlash(undefined), 1500)
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Falha ao buscar palete para reabastecimento'
       setFlash(msg)

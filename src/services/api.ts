@@ -16,7 +16,7 @@ const SUPPLY_BASE_URL =
   getRuntimeEnv('VITE_SUPPLY_API_URL') || getRuntimeEnv('VITE_SUPPLY_API_BASE_URL')
 
 function buildUrl(path: string, overrideBaseUrl?: string) {
-  const rawBase = overrideBaseUrl !== undefined ? overrideBaseUrl : getBaseUrl()
+  const rawBase = overrideBaseUrl !== undefined ? overrideBaseUrl : BASE_URL
   const base = rawBase.replace(/\/+$/, '')
   if (!base) {
     throw new Error('URL do backend não configurada. Defina a variável VITE_API_URL na .env ou no container.')
@@ -145,6 +145,6 @@ export function supplyApiFetch<T = unknown>(
 ): Promise<T> {
   return apiFetch<T>(path, {
     ...options,
-    baseUrl: getSupplyBaseUrl(),
+    baseUrl: options.baseUrl ?? SUPPLY_BASE_URL,
   })
 }

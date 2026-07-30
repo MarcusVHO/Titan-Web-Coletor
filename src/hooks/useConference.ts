@@ -95,6 +95,12 @@ export function useConference(orderParam: string | null) {
     }
   }, [checking])
 
+  useEffect(() => {
+    return () => {
+      if (flashTimer.current) window.clearTimeout(flashTimer.current)
+    }
+  }, [])
+
   const showFlashMessage = (msg: string) => {
     if (flashTimer.current) {
       window.clearTimeout(flashTimer.current)

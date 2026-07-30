@@ -291,52 +291,56 @@ button:focus-visible {
   right: max(12px, env(safe-area-inset-right));
 }
 .dash__menu {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(130px, 1fr));
   gap: 1.25rem;
   justify-content: center;
-  align-items: center;
-  max-width: 360px;
+  align-items: stretch;
+  max-width: 440px;
   width: 100%;
 }
 .pmd__button {
-  width: 140px;
-  height: 140px;
-  padding: 0.75rem 0.4rem;
+  width: 100%;
+  min-height: 130px;
+  padding: 1rem 0.6rem;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: .4rem;
+  gap: 0.6rem;
   text-transform: uppercase;
-  letter-spacing: .02em;
+  letter-spacing: 0.03em;
   font-weight: 700;
   border-radius: 16px;
-  border: 1px solid rgba(220, 38, 38, 0.15);
-  background: linear-gradient(135deg, #ffffff, #fffbe6);
+  border: 2px solid #fca5a5;
+  background: linear-gradient(135deg, #ffffff 0%, #fffbe6 100%);
   color: #dc2626;
+  text-decoration: none;
   box-shadow:
-    0 10px 25px rgba(0,0,0,0.05),
-    0 2px 5px rgba(0,0,0,0.02);
-  transition: all 0.3s ease;
+    0 8px 20px rgba(220, 38, 38, 0.08),
+    0 2px 5px rgba(0, 0, 0, 0.02);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
 }
 .pmd__button span {
-  font-size: 0.75rem;
-  line-height: 1.1;
+  font-size: clamp(0.72rem, 3.2vw, 0.85rem);
+  line-height: 1.2;
   text-align: center;
   max-width: 100%;
-  word-break: break-word;
-  white-space: normal;
-  overflow-wrap: anywhere;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
-.pmd__button:hover {
-  transform: translateY(-4px);
+.pmd__button:hover,
+.pmd__button:focus-visible {
+  transform: translateY(-3px);
+  background: linear-gradient(135deg, #fef2f2 0%, #fef3c7 100%);
+  border-color: #dc2626;
+  color: #b91c1c;
   box-shadow:
-    0 14px 30px rgba(220, 38, 38, 0.15),
-    0 4px 10px rgba(234, 179, 8, 0.1);
-  border-color: rgba(220, 38, 38, 0.35);
+    0 12px 28px rgba(220, 38, 38, 0.18),
+    0 4px 10px rgba(234, 179, 8, 0.12);
 }
 .pmd__icon {
   width: 44px;
@@ -345,28 +349,34 @@ button:focus-visible {
   flex-shrink: 0;
 }
 @media (max-width: 420px) {
+  .dash__menu {
+    gap: 0.85rem;
+    grid-template-columns: repeat(2, minmax(110px, 1fr));
+  }
   .pmd__button {
-    width: 125px;
-    height: 125px;
+    min-height: 115px;
+    padding: 0.8rem 0.4rem;
     border-radius: 14px;
-    padding: 0.5rem 0.3rem;
   }
   .pmd__button span {
-    font-size: 0.7rem;
+    font-size: clamp(0.68rem, 3vw, 0.78rem);
   }
   .pmd__icon {
     width: 36px;
     height: 36px;
   }
 }
-@media (max-width: 360px) {
-  .pmd__button { width: 110px; height: 110px; }
-  .pmd__button span { font-size: 0.65rem; }
-  .pmd__icon { width: 32px; height: 32px; }
-}
-@media (max-width: 300px) {
-  .pmd__button { width: 88px; height: 88px; }
-  .pmd__icon { width: 30px; height: 30px; }
+@media (max-width: 330px) {
+  .dash__menu {
+    grid-template-columns: 1fr;
+  }
+  .pmd__button {
+    min-height: 80px;
+    flex-direction: row;
+    justify-content: flex-start;
+    padding: 0.8rem 1.2rem;
+    gap: 1rem;
+  }
 }
 
 /* List (PMD orders) */
@@ -545,9 +555,9 @@ button:focus-visible {
   color: #64748b;
 }
 .list__fines--has {
-  color: #b45309;
-  background: #fef3c7;
-  border: 1px solid #fde68a;
+  color: #6d28d9;
+  background: #ede9fe;
+  border: 1px solid #c4b5fd;
   padding: .2rem .5rem;
   border-radius: 8px;
   font-size: .85rem;
@@ -675,7 +685,7 @@ button:focus-visible {
   color: #475569;
 }
 .conf__fines {
-  color: #d97706;
+  color: #7c3aed;
   font-weight: 600;
 }
 .conf__scan-input {
@@ -717,9 +727,9 @@ button:focus-visible {
   font-weight: 600;
 }
 .conf__badge--fines {
-  color: #b45309;
-  background: #fef3c7;
-  border: 1px solid #fde68a;
+  color: #6d28d9;
+  background: #ede9fe;
+  border: 1px solid #c4b5fd;
 }
 .conf__badge--checked {
   color: #047857;

@@ -129,12 +129,16 @@ export default function Picking() {
                   inputMode="none"
                   enterKeyHint="done"
                   onBlur={(e) => {
-                  if (submitting || loading) return
-                  if (e.relatedTarget && (e.relatedTarget.tagName === 'BUTTON' || e.relatedTarget.tagName === 'A')) return
-                  if (isPickingStatus) {
-                    setTimeout(() => locationInputRef.current?.focus(), 10)
-                  }
-                }}
+                    if (submitting || loading) return
+                    if (e.relatedTarget && (e.relatedTarget.tagName === 'BUTTON' || e.relatedTarget.tagName === 'A')) return
+                    setTimeout(() => {
+                      const active = document.activeElement
+                      if (active && (active.tagName === 'BUTTON' || active.tagName === 'A')) return
+                      if (isPickingStatus) {
+                        locationInputRef.current?.focus()
+                      }
+                    }, 100)
+                  }}
                 />
                 <button
                   type="submit"
@@ -165,9 +169,13 @@ export default function Picking() {
                   onBlur={(e) => {
                     if (submitting || loading) return
                     if (e.relatedTarget && (e.relatedTarget.tagName === 'BUTTON' || e.relatedTarget.tagName === 'A')) return
-                    if (!isPickingStatus) {
-                      setTimeout(() => suInputRef.current?.focus(), 10)
-                    }
+                    setTimeout(() => {
+                      const active = document.activeElement
+                      if (active && (active.tagName === 'BUTTON' || active.tagName === 'A')) return
+                      if (!isPickingStatus) {
+                        suInputRef.current?.focus()
+                      }
+                    }, 100)
                   }}
                 />
                 <button
