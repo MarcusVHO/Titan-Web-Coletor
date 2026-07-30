@@ -16,7 +16,11 @@ const SUPPLY_BASE_URL =
   getRuntimeEnv('VITE_SUPPLY_API_URL') || getRuntimeEnv('VITE_SUPPLY_API_BASE_URL')
 
 function buildUrl(path: string, overrideBaseUrl?: string) {
-  const base = (overrideBaseUrl || BASE_URL).replace(/\/+$/, '')
+  const rawBase = overrideBaseUrl !== undefined ? overrideBaseUrl : getBaseUrl()
+  const base = rawBase.replace(/\/+$/, '')
+  if (!base) {
+    throw new Error('URL do backend não configurada. Defina a variável VITE_API_URL na .env ou no container.')
+  }
   const p = path.replace(/^\/+/, '')
   return `${base}/${p}`
 }
@@ -70,7 +74,7 @@ export async function apiFetch<T = unknown>(
       signal: controller.signal,
     })
 
-    if (res.status === 401) {
+    if (res.status === 401 && options.auth) {
       clearToken()
       window.location.href = '/'
       throw new Error('Sessão expirada. Faça login novamente.')
@@ -141,6 +145,6 @@ export function supplyApiFetch<T = unknown>(
 ): Promise<T> {
   return apiFetch<T>(path, {
     ...options,
-    baseUrl: SUPPLY_BASE_URL,
+    baseUrl: getSupplyBaseUrl(),
   })
 }
