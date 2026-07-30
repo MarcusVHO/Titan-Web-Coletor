@@ -10,7 +10,7 @@ RUN npm ci
 # Copy source code
 COPY . .
 
-# Build arguments for environment variables
+# Build arguments for environment variables passed during docker build
 ARG VITE_API_URL
 ARG VITE_SUPPLY_API_URL
 
@@ -28,9 +28,12 @@ WORKDIR /app
 # Install serve package to serve SPA static files
 RUN npm install -g serve
 
-# Copy production build artifacts
+# Copy production build artifacts and entrypoint script
 COPY --from=builder /app/dist ./dist
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
 
 EXPOSE 80
 
+ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["serve", "-s", "dist", "-l", "80"]

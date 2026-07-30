@@ -1,18 +1,19 @@
-const getEnvVar = (v1?: string, v2?: string) => {
-  if (v1 && v1.trim()) return v1.trim()
-  if (v2 && v2.trim()) return v2.trim()
-  return ''
+const getRuntimeEnv = (key: string): string => {
+  if (typeof window !== 'undefined' && (window as unknown as Record<string, Record<string, string>>).__ENV__) {
+    const env = (window as unknown as Record<string, Record<string, string>>).__ENV__
+    const val = env[key]
+    if (typeof val === 'string' && val.trim() && !val.startsWith('$')) {
+      return val.trim()
+    }
+  }
+  return (import.meta.env[key] as string) ?? ''
 }
 
-const BASE_URL = getEnvVar(
-  import.meta.env.VITE_API_URL,
-  import.meta.env.VITE_API_BASE_URL,
-)
+const BASE_URL =
+  getRuntimeEnv('VITE_API_URL') || getRuntimeEnv('VITE_API_BASE_URL')
 
-const SUPPLY_BASE_URL = getEnvVar(
-  import.meta.env.VITE_SUPPLY_API_URL,
-  import.meta.env.VITE_SUPPLY_API_BASE_URL,
-)
+const SUPPLY_BASE_URL =
+  getRuntimeEnv('VITE_SUPPLY_API_URL') || getRuntimeEnv('VITE_SUPPLY_API_BASE_URL')
 
 function buildUrl(path: string, overrideBaseUrl?: string) {
   const base = (overrideBaseUrl || BASE_URL).replace(/\/+$/, '')
