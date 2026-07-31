@@ -1,0 +1,12 @@
+services:
+  titan-web-coletor:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: titan-web-coletor
+    ports:
+      - "3001:80"
+    environment:
+      - VITE_API_URL=${VITE_API_URL:-http://localhost:25566}
+      - VITE_SUPPLY_API_URL=${VITE_SUPPLY_API_URL:-http://localhost:8081}
+    restart: unless-stopped
